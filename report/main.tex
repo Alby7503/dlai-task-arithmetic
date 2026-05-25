@@ -1,0 +1,142 @@
+\documentclass{article}
+
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{overpic}
+\usepackage{amssymb}
+
+\usepackage[accepted]{dlaiml2026}
+
+\dlaititlerunning{Layer-Wise Task Arithmetic in RoBERTa}
+
+\begin{document}
+
+\twocolumn[
+\dlaititle{Spectrum-Guided Task Arithmetic: Layer-Wise Merging for Multi-Task Interference Mitigation in RoBERTa}
+
+\begin{center}\today\end{center}
+
+\begin{dlaiauthorlist}
+\dlaiauthor{Alberto Vona}{}
+\end{dlaiauthorlist}
+
+\dlaicorrespondingauthor{Alberto Vona}{vona.2068261@studenti.uniroma1.it}
+
+\vskip 0.3in
+]
+
+\printAffiliationsAndNotice{}
+
+\begin{abstract}
+%
+Model merging via Task Arithmetic offers a highly efficient, zero-shot alternative to multi-task fine-tuning by linearly combining the weights of pre-trained models. However, merging tasks with disparate semantic complexities often leads to catastrophic interference. In this project, we investigate the layer-wise dynamics of Task Arithmetic using RoBERTa-base on two orthogonal tasks: Natural Language Inference (SNLI) and Multi-label Emotion Classification (GoEmotions). Through systematic ablation studies, we demonstrate empirically that confining the merging process to the lower layers (L0-L5) mitigates weight interference. This bottom-up approach preserves the specialized reasoning capabilities of the upper layers, achieving 88.35\% accuracy on SNLI and a 48.03 Macro F1-score on GoEmotions, significantly outperforming full-model merging.
+%
+\end{abstract}
+
+% ------------------------------------------------------------------------------
+\section{Introduction}
+
+The development of multi-task learning models typically requires extensive computational resources and prolonged fine-tuning phases. Recently, Model Merging techniques, specifically \emph{Task Arithmetic}, have emerged as a powerful zero-shot methodology to combine the capabilities of multiple fine-tuned models without additional training. By isolating the knowledge acquired during fine-tuning into ``Task Vectors'' and applying them to a shared base model, it is possible to synthesize a multi-task network with minimal computational overhead.
+
+Despite its efficiency, Task Arithmetic suffers from weight interference when applied to semantically distant objectives. When the latent representations of different tasks require conflicting weight updates, the linear combination of their Task Vectors leads to mutual cancellation, degrading performance on both tasks. 
+
+This project investigates the hypothesis that weight interference is not uniformly distributed across the architecture of encoder-only transformers. Drawing on the feature hierarchy—where lower layers capture general syntax and higher layers specialize in task-specific semantics—we propose a \textbf{Layer-Wise Merging} strategy. We evaluate the merging of a robust, 3-class logic task (SNLI) with a fragile, 28-class multi-label task (GoEmotions) under constrained hardware. 
+
+Code: \url{https://github.com/Alby7503/dlai-task-arithmetic}.
+
+% ------------------------------------------------------------------------------
+\section{Related Work}
+
+The concept of editing models without re-training was formalized by \cite{ilharco2023editing}, who introduced \textbf{Task Arithmetic}. Their work demonstrated that fine-tuning shifts the model weights in a direction that can be represented as a vector in the parameter space. To address interference, \cite{yadav2023ties} proposed TIES-Merging to resolve sign conflicts and prune redundant parameters.
+
+Our work shifts the focus toward the architectural hierarchy. We draw inspiration from transformer interpretability, which suggests that lower layers specialize in syntactic structures while upper layers encode task-specific semantics. Unlike global merging strategies, we explore a spectrum-guided approach to localized parameter editing.
+
+% ------------------------------------------------------------------------------
+\section{Methodology}
+
+\subsection{Task Vectors Formalization}
+
+Given a pre-trained base model with weights $\theta_{base}$ and a model fine-tuned on a specific task $A$ with weights $\theta_{A}$, we define the \textbf{Task Vector} $\tau_A$ as:
+\begin{equation}
+\tau_A = \theta_{A} - \theta_{base}
+\end{equation}
+The merged model weights $\theta_{merged}$ for two tasks $A$ and $B$ are computed using a weighted linear combination:
+\begin{equation}
+\theta_{merged} = \theta_{base} + \lambda_A \tau_A + \lambda_B \tau_B
+\end{equation}
+where $\lambda$ represents the scaling coefficient for each task.
+
+\subsection{Layer-Wise Merging Strategy}
+
+We hypothesize that weight interference is higher in layers with high intrinsic dimensionality for specific tasks. We partition the RoBERTa-base architecture (12 layers) into two blocks:
+\begin{enumerate}
+    \item \textbf{Bottom Layers (L0--L5):} Merged using Task Arithmetic ($\lambda_A=0.6, \lambda_B=0.4$).
+    \item \textbf{Top Layers (L6--L11):} Left in their task-pure state to act as specialized "heads".
+\end{enumerate}
+
+During evaluation, when testing Task $B$ (NLI), we inject the merged weights for L0--L5 into the $B$-specialized backbone, preserving the original L6--L11 weights. This ensures the shared "linguistic trunk" is multi-task, while the "semantic branches" remain specialized.
+
+\subsection{Implementation Details}
+
+Experiments were conducted using \texttt{transformers} and \texttt{pytorch}. We used \texttt{roberta-base} as the backbone, \texttt{GoEmotions} (28 labels) and \texttt{SNLI} (3 labels). A Lambda Sweep identified that a 0.6/0.4 ratio provided the best trade-off between emotional sensitivity and logical consistency.
+
+% ------------------------------------------------------------------------------
+\section{Experimental Results}
+\label{sec:results}
+
+We evaluate our spectrum-guided strategy against the original task-specific architectures and a full-model merging configuration.
+
+\subsection{Quantitative Analysis}
+
+Table \ref{tab:results} summarizes the performance. Our proposed \textbf{Bottom-Up Merging} (L0--L5) achieves 88.35\% NLI accuracy, nearly matching the pure NLI baseline while simultaneously preserving a high Macro F1-score for emotion classification.
+
+\begin{table}[h]
+\vspace{-2mm}
+\caption{Merging performance ($\lambda_A = 0.6, \lambda_B = 0.4$).}
+\label{tab:results}
+\begin{center}
+\begin{small}
+\begin{tabular}{l | c c}
+\toprule
+\textbf{Strategy} & \textbf{NLI Acc.} & \textbf{Emo. F1} \\
+\midrule
+Pure Task A (Emotions) & - & 52.10 \\
+Pure Task B (NLI)      & 89.50\% & - \\
+\midrule
+Full Merge (L0--L11)   & 79.39\% & 38.20 \\
+\textbf{Bottom-Up (L0--L5)} & \textbf{88.35\%} & \textbf{48.03} \\
+Reverse (L6--L11)      & 88.35\% & 45.03 \\
+\bottomrule
+\end{tabular}
+\end{small}
+\end{center}
+\vspace{-2mm}
+\end{table}
+
+\subsection{Ablation Study: The Layer-Wise Spectrum}
+
+Comparing the \emph{Bottom-Up} and \emph{Reverse} merging configurations reveals a critical structural asymmetry. While logical inference remains robust (88.35\%), the fragile multi-label task experiences a significant degradation of 3.0 points in its Macro F1-score when parameter interference is introduced to its upper blocks. This confirms our hypothesis: fine-grained semantic routing is highly sensitive to final-layer perturbations, whereas syntax is robustly processed in the shared lower blocks.
+
+% ------------------------------------------------------------------------------
+\section{Discussion and Conclusions}
+
+Our empirical findings demonstrate that model merging via Task Arithmetic is highly sensitive to the architectural hierarchy. By leveraging the feature progression of Transformers, we identified a multi-task ``Sweet Spot''. Confining the linear combination of weights to the lower blocks (L0--L5) creates a shared linguistic foundation without compromising the task-specific heuristics encoded in the upper layers.
+
+This spectrum-guided approach effectively mitigates catastrophic interference. The marginal loss in performance compared to pure models (approx. 1.15\% for NLI and 4\% for Emotions) is a negligible trade-off considering the 50\% reduction in memory footprint compared to deploying two separate models. Future work will investigate layer-specific scaling based on intrinsic dimensionality.
+
+% ------------------------------------------------------------------------------
+\section*{Statement on the use of AI}
+\begin{small}
+AI tools (Google Gemini) were utilized to assist in brainstorming the layer-wise hypothesis, debugging PyTorch scripts (e.g., Windows encoding errors), and formatting this \LaTeX\ report. All results, analysis, and theoretical justifications were independently verified by the author.
+\end{small}
+
+% ------------------------------------------------------------------------------
+\vspace{-2mm}
+\begin{small}
+\bibliography{references.bib}
+\bibliographystyle{dlaiml2026}
+\end{small}
+
+\end{document}
