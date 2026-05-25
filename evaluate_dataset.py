@@ -85,7 +85,7 @@ def evaluate_on_datasets():
     # Per il momento stampiamo l'Accuracy del task logico che è il vero scoglio.
 
     print("\n==================================================")
-    print(f"📊 RISULTATI FINALI SUL DATASET")
+    print(f"RISULTATI FINALI SUL DATASET")
     print("==================================================")
     print(f"Modello: RoBERTa-Ibrido (Emo: 0.6 | Log: 0.4)")
     print(f"Accuratezza Logica (SNLI): {acc_nli:.2f}% ({corrette_nli}/{totali_nli} frasi corrette)")

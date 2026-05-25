@@ -90,7 +90,7 @@ def evaluate_layer_wise():
     acc_nli = (corrette_nli / totali_nli) * 100
 
     print("\n==================================================")
-    print(f"📊 RISULTATI: LAYER-WISE MERGING")
+    print(f"RISULTATI: LAYER-WISE MERGING")
     print("==================================================")
     print(f"Modello: RoBERTa Ibrido (Solo L0-L5 fusi | L6-L11 Puri NLI)")
     print(f"Accuratezza Logica (SNLI): {acc_nli:.2f}% ({corrette_nli}/{totali_nli})")

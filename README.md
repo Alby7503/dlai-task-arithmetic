@@ -41,36 +41,26 @@ This project leverages the modern and fast Python package manager [**`uv`**](htt
 
 ## 🚀 Execution & Usage
 
-### ⚠️ Windows Console Portability Notice
-Due to terminal emoji markers (e.g., `📊`, `🚀`) printed in execution reports, standard Windows shells (which use `cp1252` encoding by default) will throw a `UnicodeEncodeError`. To prevent this, always set the standard stream encoding to UTF-8:
-
-* **On Windows PowerShell:**
-  ```powershell
-  $env:PYTHONIOENCODING="utf-8"; uv run <script_name>.py
-  ```
-* **On Linux / macOS:**
-  ```bash
-  uv run <script_name>.py
-  ```
+All pipelines can be executed cleanly on any standard Windows, Linux, or macOS terminal using `uv`:
 
 ### 1. Run Hardware Diagnostics
-```powershell
-$env:PYTHONIOENCODING="utf-8"; uv run test_vram.py
+```bash
+uv run test_vram.py
 ```
 
 ### 2. Evaluate the Full Merge Baseline
-```powershell
-$env:PYTHONIOENCODING="utf-8"; uv run evaluate_dataset.py
+```bash
+uv run evaluate_dataset.py
 ```
 
 ### 3. Evaluate the Proposed Layer-Wise Model (L0–L5 Merged)
-```powershell
-$env:PYTHONIOENCODING="utf-8"; uv run evaluate_hybrid_final.py
+```bash
+uv run evaluate_hybrid_final.py
 ```
 
 ### 4. Evaluate the Reverse Merging Ablation (L6–L11 Merged)
-```powershell
-$env:PYTHONIOENCODING="utf-8"; uv run evaluate_hybrid_reverse.py
+```bash
+uv run evaluate_hybrid_reverse.py
 ```
 
 ---

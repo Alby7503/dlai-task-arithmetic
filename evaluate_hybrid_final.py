@@ -87,7 +87,7 @@ def evaluate_hybrid():
     f1_emo = f1_score(all_labels, all_preds, average='macro', zero_division=0)
 
     print("\n" + "="*50)
-    print("📊 REPORT FINALE MODELLO IBRIDO")
+    print("REPORT FINALE MODELLO IBRIDO")
     print("="*50)
     print(f"1. LOGICA (NLI Accuracy):  { (corrette_nli/totali_nli)*100 :.2f}%")
     print(f"2. EMOZIONI (F1-Score):     { f1_emo*100 :.2f}")

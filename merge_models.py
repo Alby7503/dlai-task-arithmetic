@@ -53,7 +53,7 @@ def evaluate_sweep():
         premise, hypothesis, return_tensors="pt", truncation=True).to(device)
 
     print("\n==================================================")
-    print("🚀 INIZIO LAMBDA SWEEP")
+    print("INIZIO LAMBDA SWEEP")
     print("==================================================\n")
 
     for la, lb in lambda_pairs:
